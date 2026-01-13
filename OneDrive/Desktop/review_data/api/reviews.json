@@ -1,7 +1,0 @@
-{
-  "success": true,
-  "status": 200,
-  "message": "Use /api/reviews.html for filtering and query parameters. This file contains all reviews.",
-  "note": "For filtering, sorting, and pagination, use: /api/reviews.html?rating=5&sort=date&order=desc&page=1&limit=10"
-}
-
