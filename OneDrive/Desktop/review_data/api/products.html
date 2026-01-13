@@ -1,0 +1,46 @@
+<script>
+// This file acts as an API endpoint that returns all products
+// Access via: /api/products.html
+
+(async function() {
+    try {
+        // Get the base URL and construct path to reviews.json
+        const currentPath = window.location.pathname;
+        const basePath = currentPath.replace(/\/api\/.*$/, '');
+        const reviewsPath = basePath + (basePath.endsWith('/') ? '' : '/') + 'reviews.json';
+        
+        const response = await fetch(reviewsPath);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch reviews.json from ${reviewsPath}: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data || !data.reviews || !Array.isArray(data.reviews)) {
+            throw new Error('Invalid data format: reviews array not found');
+        }
+        
+        const reviews = data.reviews;
+        
+        const products = [...new Set(reviews.map(r => r.product))];
+        
+        const result = {
+            success: true,
+            status: 200,
+            data: products.sort()
+        };
+        
+        document.write('<pre>' + JSON.stringify(result, null, 2) + '</pre>');
+        
+    } catch (error) {
+        const errorResponse = {
+            error: true,
+            status: 500,
+            message: error.message
+        };
+        document.write('<pre>' + JSON.stringify(errorResponse, null, 2) + '</pre>');
+    }
+})();
+</script>
+

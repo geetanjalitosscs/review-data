@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Data API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .api-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .api-endpoint {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: #f0f0f0;
+            padding: 10px 15px;
+            border-radius: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .reviews-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #c33;
+        }
+
+        .review-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: #fafafa;
+        }
+
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .review-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .review-rating {
+            color: #ffa500;
+            font-size: 18px;
+        }
+
+        .review-product {
+            color: #667eea;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .review-comment {
+            color: #555;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .review-date {
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .json-display {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input[type="text"] {
+            font-family: 'Courier New', monospace;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Review Data API</h1>
+            <p style="font-size: 1.2em;">REST API-like interface for review data</p>
+        </header>
+
+        <div class="api-info">
+            <h2 style="margin-bottom: 15px;">API Endpoints (HTTP Accessible)</h2>
+            <div class="api-endpoint">
+                <strong>GET:</strong> <span id="api-url">api/reviews.html</span> - Get all reviews
+            </div>
+            <div class="api-endpoint">
+                <strong>GET:</strong> <span>api/reviews.html?rating=5</span> - Filter by rating
+            </div>
+            <div class="api-endpoint">
+                <strong>GET:</strong> <span>api/reviews.html?product=Product A</span> - Filter by product
+            </div>
+            <div class="api-endpoint">
+                <strong>GET:</strong> <span>api/reviews/1</span> - Get review by ID (via 404.html)
+            </div>
+            <div class="api-endpoint">
+                <strong>GET:</strong> <span>api/stats.html</span> - Get statistics
+            </div>
+            <div class="api-endpoint">
+                <strong>GET:</strong> <span>api/products.html</span> - Get all products
+            </div>
+            <p style="margin-top: 15px; font-size: 0.9em; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+                <strong>✅ Postman Ready:</strong> All endpoints work via HTTP. Use the full URL:<br>
+                <code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 3px; display: inline-block; margin-top: 5px;">
+                    https://yourusername.github.io/repo-name/api/reviews.html
+                </code>
+            </p>
+        </div>
+
+        <div class="controls">
+            <button onclick="fetchReviews()">🔄 Fetch All Reviews</button>
+            <button onclick="testAPIEndpoints()">🧪 Test API Endpoints</button>
+            <button onclick="toggleJsonView()">📄 Toggle JSON View</button>
+            <button onclick="clearData()">🗑️ Clear Data</button>
+            
+            <div style="margin-top: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Quick API Test:</label>
+                <input type="text" id="api-test-input" placeholder="api/reviews?rating=5" 
+                       style="padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                <button onclick="testCustomEndpoint()">Test Endpoint</button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Reviews</div>
+                    <div class="stat-value" id="total-reviews">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Average Rating</div>
+                    <div class="stat-value" id="avg-rating">0.0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">5 Star Reviews</div>
+                    <div class="stat-value" id="five-star">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-message" class="error hidden"></div>
+
+        <div class="reviews-container">
+            <div id="loading" class="loading hidden">Loading reviews...</div>
+            <div id="reviews-list"></div>
+            <div id="json-view" class="json-display hidden"></div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        let reviewsData = null;
+        let showJson = false;
+
+        // Fetch reviews using API
+        async function fetchReviews() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error-message');
+            const reviewsList = document.getElementById('reviews-list');
+            
+            loadingEl.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            reviewsList.innerHTML = '';
+
+            try {
+                const result = await ReviewAPI.getAllReviews();
+                
+                if (result.error) {
+                    throw new Error(result.message);
+                }
+                
+                reviewsData = result.data;
+                
+                displayReviews(reviewsData);
+                updateStats(reviewsData);
+                
+            } catch (error) {
+                errorEl.textContent = `Error fetching reviews: ${error.message}`;
+                errorEl.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+        
+        // Test API endpoints
+        async function testAPIEndpoints() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error-message');
+            const reviewsList = document.getElementById('reviews-list');
+            
+            loadingEl.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            
+            try {
+                console.log('Testing API Endpoints...');
+                
+                // Test all endpoints
+                const [allReviews, reviewById, stats, products, fiveStar] = await Promise.all([
+                    ReviewAPI.getAllReviews(),
+                    ReviewAPI.getReviewById(1),
+                    ReviewAPI.getStats(),
+                    ReviewAPI.getProducts(),
+                    ReviewAPI.getReviewsByRating(5)
+                ]);
+                
+                console.log('All Reviews:', allReviews);
+                console.log('Review by ID:', reviewById);
+                console.log('Stats:', stats);
+                console.log('Products:', products);
+                console.log('5 Star Reviews:', fiveStar);
+                
+                // Display all reviews
+                reviewsData = allReviews.data;
+                displayReviews(reviewsData);
+                updateStats(reviewsData);
+                
+                // Show success message
+                errorEl.textContent = '✅ All API endpoints tested successfully! Check console for details.';
+                errorEl.style.background = '#efe';
+                errorEl.style.color = '#3c3';
+                errorEl.style.borderColor = '#3c3';
+                errorEl.classList.remove('hidden');
+                
+            } catch (error) {
+                errorEl.textContent = `Error testing API: ${error.message}`;
+                errorEl.style.background = '#fee';
+                errorEl.style.color = '#c33';
+                errorEl.style.borderColor = '#c33';
+                errorEl.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+        
+        // Test custom endpoint
+        async function testCustomEndpoint() {
+            const input = document.getElementById('api-test-input');
+            const endpoint = input.value.trim();
+            
+            if (!endpoint) {
+                alert('Please enter an API endpoint');
+                return;
+            }
+            
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error-message');
+            const reviewsList = document.getElementById('reviews-list');
+            
+            loadingEl.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            reviewsList.innerHTML = '';
+            
+            try {
+                const result = await ReviewAPI.call(endpoint);
+                
+                if (result.error) {
+                    throw new Error(result.message);
+                }
+                
+                // Display results
+                if (result.data) {
+                    if (Array.isArray(result.data)) {
+                        reviewsData = result.data;
+                        displayReviews(reviewsData);
+                        updateStats(reviewsData);
+                    } else {
+                        // Single object or stats
+                        reviewsList.innerHTML = `
+                            <div class="json-display" style="max-height: none;">
+                                <pre>${JSON.stringify(result, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                }
+                
+                console.log('API Result:', result);
+                
+            } catch (error) {
+                errorEl.textContent = `Error: ${error.message}`;
+                errorEl.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // Display reviews in cards
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviews-list');
+            
+            if (reviews.length === 0) {
+                reviewsList.innerHTML = '<p style="text-align: center; padding: 40px; color: #666;">No reviews found.</p>';
+                return;
+            }
+
+            reviewsList.innerHTML = reviews.map(review => `
+                <div class="review-card">
+                    <div class="review-header">
+                        <div>
+                            <div class="review-name">${review.name}</div>
+                            <div class="review-product">${review.product}</div>
+                        </div>
+                        <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)} (${review.rating}/5)</div>
+                    </div>
+                    <div class="review-comment">${review.comment}</div>
+                    <div class="review-date">Date: ${review.date} | ID: #${review.id}</div>
+                </div>
+            `).join('');
+        }
+
+        // Update statistics
+        function updateStats(reviews) {
+            const total = reviews.length;
+            const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1);
+            const fiveStar = reviews.filter(r => r.rating === 5).length;
+
+            document.getElementById('total-reviews').textContent = total;
+            document.getElementById('avg-rating').textContent = avgRating;
+            document.getElementById('five-star').textContent = fiveStar;
+        }
+
+        // Toggle JSON view
+        function toggleJsonView() {
+            showJson = !showJson;
+            const jsonView = document.getElementById('json-view');
+            const reviewsList = document.getElementById('reviews-list');
+            
+            if (showJson && reviewsData) {
+                jsonView.textContent = JSON.stringify({ reviews: reviewsData }, null, 2);
+                jsonView.classList.remove('hidden');
+                reviewsList.classList.add('hidden');
+            } else {
+                jsonView.classList.add('hidden');
+                reviewsList.classList.remove('hidden');
+            }
+        }
+
+        // Clear data
+        function clearData() {
+            reviewsData = null;
+            document.getElementById('reviews-list').innerHTML = '';
+            document.getElementById('json-view').classList.add('hidden');
+            document.getElementById('total-reviews').textContent = '0';
+            document.getElementById('avg-rating').textContent = '0.0';
+            document.getElementById('five-star').textContent = '0';
+            showJson = false;
+        }
+
+        // Update API URL based on current location
+        function updateApiUrl() {
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+            document.getElementById('api-url').textContent = baseUrl + 'api/reviews.html';
+        }
+
+        // Register service worker for API endpoints
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            updateApiUrl();
+            // Initialize API
+            await ReviewAPI.init();
+            // Auto-fetch on load
+            fetchReviews();
+        });
+    </script>
+</body>
+</html>
+
